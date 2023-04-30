@@ -1,0 +1,14 @@
+{
+  "name": "budgets",
+  "version": "1.0.0",
+  "description": "portofiloproject",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "WillYao",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
