@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Envelope Budget App</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffedf0;
+  color: #444;
+    padding: 5rem;
+  height: 100vh;
+  margin: 0;
+}
+form {
+  margin-bottom: 1rem;
+}
+
+input {
+  margin: 0.5rem;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+  </style>
+</head>
+<body>
+  <h1>Envelope Budget App</h1>
+  <form id="create-envelope-form">
+    <label for="title">Title:</label>
+    <input type="text" id="title" required>
+    <label for="budget">Budget:</label>
+    <input type="number" id="budget" required>
+    <button type="submit">Create Envelope</button>
+  </form>
+
+  <h2>Update Envelope</h2>
+  <form id="update-envelope-form">
+    <label for="update-id">Envelope ID:</label>
+    <input type="number" id="update-id" required>
+    <label for="update-title">New Title:</label>
+    <input type="text" id="update-title">
+    <label for="update-amount">Amount:</label>
+    <input type="number" id="update-amount">
+    <button type="submit">Update Envelope</button>
+  </form>
+
+  <h2>Transfer Amount</h2>
+  <form id="transfer-form">
+    <label for="from-id">From Envelope ID:</label>
+    <input type="number" id="from-id" required>
+    <label for="to-id">To Envelope ID:</label>
+    <input type="number" id="to-id" required>
+    <label for="transfer-amount">Amount:</label>
+    <input type="number" id="transfer-amount" required>
+    <button type="submit">Transfer</button>
+  </form>
+
+  <h2>Delete Envelope</h2>
+  <form id="delete-envelope-form">
+    <label for="delete-id">Envelope ID:</label>
+    <input type="number" id="delete-id" required>
+    <button type="submit">Delete Envelope</button>
+  </form>
+
+  <h2>Envelopes</h2>
+  <ul id="envelope-list"></ul>
+  <script>
+    // Add your JavaScript code here
+    const API_URL = 'http://localhost:3000'; // Replace with your backend server address
+
+document.getElementById('create-envelope-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const title = document.getElementById('title').value;
+  const budget = parseFloat(document.getElementById('budget').value);
+
+  await createEnvelope(title, budget);
+  await loadEnvelopes();
+});
+
+async function createEnvelope(title, budget) {
+  const response = await fetch(`${API_URL}/envelopes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ title, budget }),
+  });
+
+  if (response.ok) {
+    console.log('Envelope created successfully');
+  } else {
+    console.error('Failed to create envelope');
+  }
+}
+
+async function loadEnvelopes() {
+  const response = await fetch(`${API_URL}/envelopes`);
+  const envelopes = await response.json();
+
+  const envelopeList = document.getElementById('envelope-list');
+  envelopeList.innerHTML = '';
+
+  envelopes.forEach((envelope) => {
+    const listItem = document.createElement('li');
+    listItem.textContent = `${envelope.title}: $${envelope.budget}`;
+    envelopeList.appendChild(listItem);
+  });
+}
+
+loadEnvelopes(); 
+
+document.getElementById('update-envelope-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const id = parseInt(document.getElementById('update-id').value);
+  const title = document.getElementById('update-title').value;
+  const amount = parseFloat(document.getElementById('update-amount').value);
+
+  await updateEnvelope(id, title, amount);
+  await loadEnvelopes();
+});
+
+async function updateEnvelope(id, title, amount) {
+  const data = {};
+
+  if (title) data.title = title;
+  if (!isNaN(amount)) data.amount = amount;
+
+  const response = await fetch(`${API_URL}/envelopes/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (response.ok) {
+    console.log('Envelope updated successfully');
+  } else {
+    console.error('Failed to update envelope');
+  }
+}
+
+document.getElementById('transfer-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const fromId = parseInt(document.getElementById('from-id').value);
+  const toId = parseInt(document.getElementById('to-id').value);
+  const amount = parseFloat(document.getElementById('transfer-amount').value);
+
+  await transferAmount(fromId, toId, amount);
+  await loadEnvelopes();
+});
+
+async function transferAmount(fromId, toId, amount) {
+  const response = await fetch(`${API_URL}/envelopes/transfer/${fromId}/${toId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+
+  if (response.ok) {
+    console.log('Amount transferred successfully');
+  } else {
+    console.error('Failed to transfer amount');
+  }
+}
+
+// Load envelopes on page load
+  </script>
+</body>
+</html>
