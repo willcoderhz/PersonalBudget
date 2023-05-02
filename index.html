@@ -56,6 +56,13 @@ li {
   padding: 1rem;
   margin-bottom: 1rem;
 }
+
+#transaction-table {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 3px;
+  }
+
   </style>
 </head>
 <body>
@@ -96,6 +103,32 @@ li {
     <input type="number" id="delete-id" required>
     <button type="submit">Delete Envelope</button>
   </form>
+
+  <h2>Transactions</h2>
+  <form id="create-transaction-form">
+    <label for="transaction-date">Date:</label>
+    <input type="date" id="transaction-date" required>
+    <label for="transaction-amount">Amount:</label>
+    <input type="number" id="transaction-amount" required>
+    <label for="transaction-recipient">Recipient:</label>
+    <input type="text" id="transaction-recipient" required>
+    <label for="transaction-envelope-id">Envelope ID:</label>
+    <input type="number" id="transaction-envelope-id" required>
+    <button type="submit">Add Transaction</button>
+  </form>
+  
+  <table id="transaction-table" border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Recipient</th>
+        <th>Envelope ID</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <h2>Envelopes</h2>
   <ul id="envelope-list"></ul>
@@ -201,6 +234,58 @@ async function transferAmount(fromId, toId, amount) {
     console.log('Amount transferred successfully');
   } else {
     console.error('Failed to transfer amount');
+  }
+}
+
+async function loadTransactions() {
+  const response = await fetch(`${API_URL}/transactions`);
+  const transactions = await response.json();
+
+  const transactionTableBody = document.getElementById('transaction-table').querySelector('tbody');
+  transactionTableBody.innerHTML = '';
+
+  transactions.forEach((transaction) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${transaction.id}</td>
+      <td>${transaction.date}</td>
+      <td>$${transaction.amount}</td>
+      <td>${transaction.recipient}</td>
+      <td>${transaction.envelope_id}</td>
+    `;
+    transactionTableBody.appendChild(row);
+  });
+}
+
+loadTransactions();
+
+// Create a new transaction
+document.getElementById('create-transaction-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const date = document.getElementById('transaction-date').value;
+  const amount = parseFloat(document.getElementById('transaction-amount').value);
+  const recipient = document.getElementById('transaction-recipient').value;
+  const envelope_id = parseInt(document.getElementById('transaction-envelope-id').value);
+
+  await createTransaction(date, amount, recipient, envelope_id);
+  await loadTransactions();
+  await loadEnvelopes();
+});
+
+async function createTransaction(date, amount, recipient, envelope_id) {
+  const response = await fetch(`${API_URL}/transactions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ date, amount, recipient, envelope_id }),
+  });
+
+  if (response.ok) {
+    console.log('Transaction created successfully');
+  } else {
+    console.error('Failed to create transaction');
   }
 }
 
